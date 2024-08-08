@@ -153,7 +153,7 @@ public class ElementUtils {
 
         // based on
         // https://github.com/openjdk/jdk/pull/3556/files#diff-a6270f4b50989abe733607c69038b2036306d13f77276af005d023b7fc57f1a2R2368
-        var componentList = record.getRecordComponents().stream().map(e -> e.asType().toString())
+        var componentList = getRecordComponents(record).stream().map(e -> e.asType().toString())
                 .collect(Collectors.toList());
         return record.getEnclosedElements().stream().filter(element -> element.getKind() == ElementKind.CONSTRUCTOR)
                 .filter(element -> {
@@ -162,6 +162,14 @@ public class ElementUtils {
                             .collect(Collectors.toList());
                     return componentList.equals(parametersList);
                 }).findFirst();
+    }
+
+    public static List<RecordComponentElement> getRecordComponents(TypeElement record) {
+        // Use this technique instead of calling TypeElement.getRecordComponents() for compatibility
+        // with annotation processing environments like Google Turbine that are compiled against
+        // versions of Java lacking support for records.
+        return record.getEnclosedElements().stream().filter(e -> e.getKind() == ElementKind.RECORD_COMPONENT)
+                .filter(RecordComponentElement.class::isInstance).map(RecordComponentElement.class::cast).toList();
     }
 
     private static String getBuilderNamePrefix(Element element) {
